@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint Typing — Focused typing practice</title>
+    <meta name="description"
+        content="Mint Typing is a focused typing practice tool for improving speed, accuracy, and consistency.">
+    <meta name="theme-color" content="#bc0100">
+    <meta property="og:title" content="Mint Typing">
+    <meta property="og:description"
+        content="Practice typing with live speed, accuracy, and progress feedback.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styl.css">
+</head>
+
+<body data-page="home">
+    <canvas class="fx-canvas" id="fx-canvas" aria-hidden="true"></canvas>
+    
+    <header class="site-header">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">MT</span>
+            <span class="brand-name">Mint Typing</span>
+        </a>
+        
+        <div class="header-right">
+            <nav class="site-nav" id="site-nav" aria-label="Primary">
+                <a class="active" href="index.html">Home</a>
+                <a href="interface.html">Typing</a>
+            </nav>
+            <div class="header-actions">
+                <button class="tool-btn magnetic" type="button" data-theme-toggle aria-label="Toggle theme">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span class="theme-label">Theme</span>
+                </button>
+            </div>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"
+                aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero-section">
+            <div class="hero-copy">
+                <p class="eyebrow">Mint Typing / Release 2.0</p>
+                <h1 class="display-title">Type Faster.<br><span class="accent">Think Sharper.</span></h1>
+                <p class="hero-intro mono-line">A precise editorial typing experience inspired by high-performance
+                    practice tools. Train speed, accuracy, and consistency in a distraction-free, latency-free workspace.</p>
+                <div class="hero-type-strip">
+                    <p class="mono-line">The quick brown fox jumps over the lazy dog<span class="accent">|</span></p>
+                </div>
+                <div class="hero-actions">
+                    <a class="hero-button magnetic" href="interface.html">Start Typing</a>
+                </div>
+            </div>
+            <div class="hero-media">
+                <img src="assets/typing-hero.png" alt="Editorial photograph of a mechanical keyboard in a dark studio with crimson light" loading="eager" decoding="async">
+                <span class="media-caption">01 / INPUT SURFACE</span>
+            </div>
+        </section>
+
+        <section class="process-section reveal-section">
+            <div class="split-heading">
+                <h2 class="section-heading">Process</h2>
+                <span class="eyebrow">01 - 02</span>
+            </div>
+            <div class="process-grid">
+                <article class="process-card">
+                    <span class="step-index">01.</span>
+                    <h3>Start</h3>
+                    <p>Choose your session intensity and jump straight into the typing canvas without dashboard clutter or setup delay.</p>
+                </article>
+                <article class="process-card">
+                    <span class="step-index">02.</span>
+                    <h3>Type</h3>
+                    <p>Watch the kinetic cursor, progress bar, and live metrics respond with sub-millisecond tactile precision to every keystroke.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="about-section reveal-section">
+            <div class="about-panel">
+                <h2 class="section-heading">Architect of<br>the Machine.</h2>
+                <p>Engineered around typographical discipline and zero-latency input architecture. Designed for daily practice, muscle memory reinforcement, and clean flow states.</p>
+                <ul class="skill-list">
+                    <li>Semantic HTML5 & Accessible Navigation</li>
+                    <li>Editorial Multi-Theme Design System</li>
+                    <li>Sub-Millisecond Reactive Engine & Web Audio</li>
+                </ul>
+            </div>
+            <div class="portrait-panel" aria-hidden="true">
+                <div class="portrait-art">
+                    <span>FOCUS</span>
+                    <strong>REPEAT<br>REFINE</strong>
+                </div>
+                <div class="portrait-tag">Editorial Engine</div>
+            </div>
+        </section>
+
+        <section class="connect-section reveal-section">
+            <div class="connect-copy">
+                <h2 class="section-heading">Connect</h2>
+                <p>Have feedback or ideas for new drill modes and features? Drop a message or jump straight into practicing.</p>
+                <div class="hero-actions" style="margin-top: 1.5rem;">
+                    <a class="hero-button magnetic" href="interface.html">Open Typing Console</a>
+                </div>
+            </div>
+            <div class="contact-panel">
+                <form class="contact-form" id="contact-form" data-endpoint="">
+                    <div class="form-field">
+                        <label for="subject">Subject</label>
+                        <input id="subject" name="subject" type="text" placeholder="COLLABORATION" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" placeholder="USER@DOMAIN.COM" autocomplete="email" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="4" placeholder="YOUR MESSAGE HERE..." required></textarea>
+                    </div>
+                    <button class="primary-button magnetic" type="submit">Send Message</button>
+                    <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-copy">(C) 2026 MINT TYPING. BUILT FOR DAILY PRACTICE.</div>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="interface.html">Typing</a>
+        </div>
+    </footer>
+
+    <!-- GSAP & Motion Scripts (Three.js eliminated in favor of native 60fps canvas) -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+    <script src="nav.js"></script>
+    <script src="motion.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Mint Typing — Precision Keyboard Trainer",
+  "short_name": "Mint Typing",
+  "start_url": "./interface.html",
+  "display": "standalone",
+  "background_color": "#0c0d10",
+  "theme_color": "#bc0100",
+  "description": "Focused editorial typing practice with live speed, accuracy, and telemetry.",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

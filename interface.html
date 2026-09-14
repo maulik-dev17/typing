@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint Typing — Practice Interface</title>
+    <meta name="description"
+        content="Practice typing with live speed, accuracy, mechanical audio, and progress feedback.">
+    <meta name="theme-color" content="#bc0100">
+    <meta property="og:title" content="Mint Typing Practice Console">
+    <meta property="og:description"
+        content="Practice typing with live speed, accuracy, and progress feedback.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styl.css">
+</head>
+
+<body data-page="interface">
+    <canvas class="fx-canvas" id="fx-canvas" aria-hidden="true"></canvas>
+    
+    <header class="site-header">
+        <a class="brand" href="index.html">
+            <span class="brand-mark" aria-hidden="true">MT</span>
+            <span class="brand-name">Mint Typing</span>
+        </a>
+        
+        <div class="header-right">
+            <nav class="site-nav" id="site-nav" aria-label="Primary">
+                <a href="index.html">Home</a>
+                <a class="active" href="interface.html">Typing</a>
+            </nav>
+            <div class="header-actions">
+                <button class="tool-btn magnetic" type="button" data-sound-toggle aria-label="Toggle mechanical sound" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    <span class="sound-label">Sound</span>
+                </button>
+                <button class="tool-btn magnetic" type="button" data-theme-toggle aria-label="Toggle theme">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span class="theme-label">Theme</span>
+                </button>
+            </div>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav"
+                aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-shell interface-layout">
+        <section class="hero-metrics reveal-section">
+            <div class="console-heading">
+                <p class="eyebrow">Practice console / Release 2.0</p>
+                <h1 class="interface-title">Build your<br><span class="accent">typing velocity.</span></h1>
+                <div class="session-status">
+                    <span class="status-dot"></span>
+                    <span id="session-status">Ready for input</span>
+                    <span class="status-divider">/</span>
+                    <span id="session-id">SESSION 0001</span>
+                </div>
+            </div>
+            
+            <div class="metrics-group">
+                <article class="metric-block">
+                    <span class="metric-label">Words Per Minute</span>
+                    <strong class="metric-value" id="wpm-val">0</strong>
+                </article>
+                <article class="metric-block">
+                    <span class="metric-label">Accuracy</span>
+                    <div class="accuracy-wrap">
+                        <strong class="metric-value" id="acc-number">100</strong>
+                        <span class="metric-percent">%</span>
+                    </div>
+                </article>
+            </div>
+
+            <div class="control-column">
+                <div class="timer-panel">
+                    <span class="metric-label" id="timer-label">Words Left</span>
+                    <span class="timer-value" id="timer-val">25</span>
+                </div>
+                <div class="session-meta">
+                    <span>Local history</span>
+                    <strong id="history-count">0 sessions</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="control-bar reveal-section" aria-label="Session intensity controls">
+            <div>
+                <span class="metric-label">Select intensity</span>
+                <p class="control-description">Each mode calibrates target pacing without changing mechanical discipline.</p>
+            </div>
+            <div class="difficulty-toggle" role="group" aria-label="Session mode">
+                <button class="mode-btn active" type="button" data-mode="practice" aria-pressed="true">Easy <small>25 words</small></button>
+                <button class="mode-btn" type="button" data-mode="timed" aria-pressed="false">Medium <small>30 sec</small></button>
+                <button class="mode-btn" type="button" data-mode="focus" aria-pressed="false">Hard <small>75 words</small></button>
+            </div>
+        </section>
+
+        <section aria-label="Session progress" class="reveal-section">
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" role="progressbar" aria-label="Session progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+        </section>
+
+        <section class="reveal-section">
+            <div class="typing-canvas" id="typing-panel" aria-label="Typing test canvas (Click to focus)">
+                <input id="hidden-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"
+                    spellcheck="false" inputmode="text" aria-label="Typing input field">
+                <div class="focus-note" id="focus-hint">Click anywhere or start typing (Ctrl+Backspace to delete word)</div>
+                <div class="text-display" id="text-display" aria-live="off"></div>
+            </div>
+        </section>
+
+        <section class="session-actions reveal-section">
+            <button class="primary-button magnetic" id="restart-btn" type="button">Restart Session [ESC]</button>
+        </section>
+
+        <section class="analytics-grid reveal-section" aria-label="Live telemetry and analytics">
+            <article class="analytics-card chart-card">
+                <div class="analytics-header">
+                    <div>
+                        <span class="metric-label">Live Telemetry</span>
+                        <h2>Velocity curve</h2>
+                    </div>
+                    <span class="analytics-value" id="live-pace">0 WPM</span>
+                </div>
+                <svg class="velocity-chart" id="velocity-chart" viewBox="0 0 640 220" role="img" aria-label="Live typing speed chart">
+                    <defs>
+                        <linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1">
+                            <stop offset="0" stop-color="var(--primary)" stop-opacity="0.28"/>
+                            <stop offset="1" stop-color="var(--primary)" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="chart-grid-line" d="M0 40H640M0 100H640M0 160H640" />
+                    <path class="chart-area" id="velocity-area" d="M0 190 L640 190 Z" />
+                    <path class="chart-line" id="velocity-line" d="M0 190 L640 190" />
+                </svg>
+                <div class="chart-axis"><span>START</span><span>NOW</span></div>
+            </article>
+            
+            <article class="analytics-card heatmap-card">
+                <div class="analytics-header">
+                    <div>
+                        <span class="metric-label">Input Frequency</span>
+                        <h2>Keystroke heatmap</h2>
+                    </div>
+                    <span class="analytics-value" id="top-key">—</span>
+                </div>
+                <div class="keyboard" id="keyboard-heatmap" aria-label="Keyboard keystroke heatmap"></div>
+                <p class="analytics-note">The warmer the keycap, the more frequently it has been struck in your current practice session.</p>
+            </article>
+        </section>
+
+        <section class="history-section reveal-section" aria-label="Recent Practice Sessions">
+            <div class="history-header">
+                <div>
+                    <span class="eyebrow">Local Practice Records</span>
+                    <h2>Recent Sessions</h2>
+                </div>
+                <button class="secondary-button magnetic" id="clear-history-btn" type="button" style="min-height: 2.4rem; padding: 0.5rem 1rem;">Clear History</button>
+            </div>
+            <div class="history-table-wrap">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Session</th>
+                            <th>Date / Time</th>
+                            <th>Mode</th>
+                            <th>Net Speed</th>
+                            <th>Accuracy</th>
+                            <th>Errors / Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <!-- Populated dynamically from localStorage -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="results-panel hidden" id="results-panel" aria-live="polite">
+            <div class="results-head">
+                <div>
+                    <p class="eyebrow result-kicker">Session Complete</p>
+                    <h2 class="section-heading">Performance<br>Dashboard</h2>
+                </div>
+                <div class="results-actions">
+                    <button class="primary-button magnetic" id="result-restart-btn" type="button">Practice Again [ESC]</button>
+                </div>
+            </div>
+            <div class="results-grid">
+                <article class="result-card">
+                    <span>Net WPM</span>
+                    <strong id="final-wpm">0</strong>
+                </article>
+                <article class="result-card">
+                    <span>Accuracy</span>
+                    <strong id="final-acc">100%</strong>
+                </article>
+                <article class="result-card">
+                    <span>Errors</span>
+                    <strong id="final-errors">0</strong>
+                </article>
+            </div>
+            <div class="completion-grid">
+                <article class="completion-card">
+                    <span>Mode</span>
+                    <strong id="final-mode">EASY</strong>
+                </article>
+                <article class="completion-card">
+                    <span>Duration</span>
+                    <strong id="final-duration">0s</strong>
+                </article>
+                <article class="completion-card">
+                    <span>Characters Typed</span>
+                    <strong id="final-chars">0</strong>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-copy">(C) 2026 MINT TYPING. BUILT FOR DAILY PRACTICE.</div>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="interface.html">Typing</a>
+        </div>
+    </footer>
+
+    <!-- GSAP Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+    <script src="nav.js"></script>
+    <script src="motion.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

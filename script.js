@@ -46,8 +46,6 @@
     const finalDuration = document.getElementById("final-duration");
     const finalChars = document.getElementById("final-chars");
     const resultRestartBtn = document.getElementById("result-restart-btn");
-    const contactForm = document.getElementById("contact-form");
-    const formStatus = document.getElementById("form-status");
     const sessionStatus = document.getElementById("session-status");
     const sessionId = document.getElementById("session-id");
     const historyCount = document.getElementById("history-count");
@@ -65,6 +63,7 @@
         chars: [],
         currentIndex: 0,
         timerId: null,
+        telemetryTimerId: null,
         started: false,
         finished: false,
         startTime: null,
@@ -76,7 +75,9 @@
         velocity: [],
         keyCounts: {},
         sessionId: "0001",
-        soundEnabled: false
+        soundEnabled: false,
+        totalErrors: 0,
+        totalKeypresses: 0
     };
 
     // Performance Caches (Eliminates O(N) DOM query thrashing)
@@ -224,7 +225,9 @@
             resultSaved: state.resultSaved,
             velocity: state.velocity,
             keyCounts: state.keyCounts,
-            sessionId: state.sessionId
+            sessionId: state.sessionId,
+            totalErrors: state.totalErrors,
+            totalKeypresses: state.totalKeypresses
         };
 
         try {
@@ -264,6 +267,8 @@
 
     function saveSession(result) {
         const sessions = loadSessions();
+        const highestNumber = sessions.reduce((max, s) => Math.max(max, s.sessionNumber || 0), 0);
+        result.sessionNumber = highestNumber + 1;
         sessions.unshift(result);
         try {
             window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions.slice(0, 30)));
@@ -292,10 +297,11 @@
 
         historyTableBody.innerHTML = sessions.map((s, idx) => {
             const dateStr = s.date ? new Date(s.date).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recent";
-            const modeBadge = (s.mode || "EASY").toUpperCase();
+            const sessionNum = s.sessionNumber || (sessions.length - idx);
+            const modeBadge = s.mode === "timed" ? "MEDIUM" : s.mode === "focus" ? "HARD" : "EASY";
             return `
                 <tr>
-                    <td><strong>#${String(sessions.length - idx).padStart(3, "0")}</strong></td>
+                    <td><strong>#${String(sessionNum).padStart(3, "0")}</strong></td>
                     <td>${dateStr}</td>
                     <td><span class="eyebrow" style="font-size: 0.65rem;">${modeBadge}</span></td>
                     <td><strong style="color: var(--primary); font-size: 1.05rem;">${s.wpm}</strong> WPM</td>
@@ -449,9 +455,12 @@
         }
         if (cachedCharSpans[newIndex]) {
             cachedCharSpans[newIndex].classList.add("current");
-            // Auto scroll container smoothly if needed
-            if (newIndex > 0 && newIndex % 30 === 0) {
-                cachedCharSpans[newIndex].scrollIntoView({ block: "nearest", inline: "nearest" });
+            if (typingPanel) {
+                const charRect = cachedCharSpans[newIndex].getBoundingClientRect();
+                const panelRect = typingPanel.getBoundingClientRect();
+                if (charRect.bottom > panelRect.bottom || charRect.top < panelRect.top) {
+                    cachedCharSpans[newIndex].scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }
             }
         }
     }
@@ -480,7 +489,7 @@
     }
 
     function errorCount() {
-        return state.chars.filter((c) => c.status === "incorrect").length;
+        return state.totalErrors;
     }
 
     function elapsedSeconds() {
@@ -510,9 +519,9 @@
     }
 
     function calculateAccuracy() {
-        const typed = typedChars();
-        if (typed === 0) return 100;
-        return Math.max(0, Math.round((correctChars() / typed) * 100));
+        const total = state.totalKeypresses;
+        if (total === 0) return 100;
+        return Math.max(0, Math.round(((total - state.totalErrors) / total) * 100));
     }
 
     function updateProgress() {
@@ -549,8 +558,33 @@
     // --------------------------------------------------------------------------
     // SESSION LIFECYCLE
     // --------------------------------------------------------------------------
+    function handleTimerTick() {
+        const elapsed = elapsedSeconds();
+        state.timeLeft = Math.max(state.totalTime - elapsed, 0);
+        updateStats();
+
+        if (state.timeLeft <= 0) {
+            finishSession();
+        }
+    }
+
+    function handleTelemetryTick() {
+        if (!state.started || state.finished) return;
+        const currentWpm = calculateWpm();
+        state.velocity.push(currentWpm);
+        updateVelocityChart();
+    }
+
     function startSession() {
-        if (state.started && state.startTime) return;
+        if (state.started && state.startTime) {
+            if (getConfig().endType === "time" && !state.timerId) {
+                state.timerId = window.setInterval(handleTimerTick, 100);
+            }
+            if (!state.telemetryTimerId) {
+                state.telemetryTimerId = window.setInterval(handleTelemetryTick, 1000);
+            }
+            return;
+        }
 
         if (!state.started) {
             state.started = true;
@@ -561,19 +595,14 @@
         state.startTime = Date.now();
         schedulePersistSession();
 
-        if (getConfig().endType !== "time") return;
+        if (!state.telemetryTimerId) {
+            state.telemetryTimerId = window.setInterval(handleTelemetryTick, 1000);
+        }
 
-        if (state.timerId) window.clearInterval(state.timerId);
-
-        state.timerId = window.setInterval(() => {
-            const elapsed = elapsedSeconds();
-            state.timeLeft = Math.max(state.totalTime - elapsed, 0);
-            updateStats();
-
-            if (state.timeLeft <= 0) {
-                finishSession();
-            }
-        }, 100);
+        if (getConfig().endType === "time") {
+            if (state.timerId) window.clearInterval(state.timerId);
+            state.timerId = window.setInterval(handleTimerTick, 100);
+        }
     }
 
     function buildResult() {
@@ -619,6 +648,11 @@
             state.timerId = null;
         }
 
+        if (state.telemetryTimerId) {
+            window.clearInterval(state.telemetryTimerId);
+            state.telemetryTimerId = null;
+        }
+
         if (hiddenInput) hiddenInput.blur();
         updateStats();
 
@@ -638,19 +672,24 @@
 
     function resetSession() {
         if (state.timerId) window.clearInterval(state.timerId);
+        if (state.telemetryTimerId) window.clearInterval(state.telemetryTimerId);
 
         state.currentIndex = 0;
         state.timerId = null;
+        state.telemetryTimerId = null;
         state.started = false;
         state.finished = false;
         state.startTime = null;
         state.elapsedSeconds = 0;
+        state.totalErrors = 0;
+        state.totalKeypresses = 0;
         state.resultSaved = false;
         state.velocity = [];
         state.keyCounts = {};
         state.sessionId = String(Math.floor(1000 + Math.random() * 9000));
 
         if (sessionId) sessionId.textContent = `SESSION ${state.sessionId}`;
+        if (topKey) topKey.textContent = "—";
         updateSessionStatus("Ready for input");
         renderKeyboardHeatmap();
         renderHistoryTable();
@@ -739,6 +778,11 @@
 
         const current = state.chars[state.currentIndex];
         const isCorrect = key === current.expected;
+        state.totalKeypresses += 1;
+        if (!isCorrect) {
+            state.totalErrors += 1;
+        }
+
         current.typed = key;
         current.status = isCorrect ? "correct" : "incorrect";
 
@@ -752,7 +796,33 @@
         playKeyClick(key === " ", !isCorrect);
 
         if (state.currentIndex >= state.chars.length) {
-            finishSession();
+            if (getConfig().endType === "time") {
+                // Dynamically extend words so timed practice continues for the full duration
+                const extraContent = " " + shuffleWords(25);
+                const startIndex = state.chars.length;
+                const extraChars = extraContent.split("").map((c) => ({
+                    expected: c,
+                    typed: "",
+                    status: "pending"
+                }));
+                state.chars.push(...extraChars);
+
+                if (textDisplay) {
+                    const fragment = document.createDocumentFragment();
+                    extraChars.forEach((charState, i) => {
+                        const span = document.createElement("span");
+                        span.className = "char";
+                        span.dataset.index = String(startIndex + i);
+                        span.textContent = charState.expected;
+                        fragment.appendChild(span);
+                        cachedCharSpans.push(span);
+                    });
+                    textDisplay.appendChild(fragment);
+                }
+                updateCaretPosition(prevIndex, state.currentIndex);
+            } else {
+                finishSession();
+            }
         }
     }
 
@@ -779,10 +849,21 @@
         state.velocity = Array.isArray(saved.velocity) ? saved.velocity : [];
         state.keyCounts = saved.keyCounts && typeof saved.keyCounts === "object" ? saved.keyCounts : {};
         state.sessionId = saved.sessionId || "0001";
+        state.totalErrors = saved.totalErrors || 0;
+        state.totalKeypresses = saved.totalKeypresses || 0;
 
         if (state.started && !state.finished) {
             state.startTime = Date.now();
             state.timeLeft = Math.max(state.totalTime - state.elapsedSeconds, 0);
+
+            // Resume active timers on restored session
+            if (getConfig().endType === "time" && state.timeLeft > 0) {
+                if (state.timerId) window.clearInterval(state.timerId);
+                state.timerId = window.setInterval(handleTimerTick, 100);
+            }
+            if (!state.telemetryTimerId) {
+                state.telemetryTimerId = window.setInterval(handleTelemetryTick, 1000);
+            }
         }
 
         if (timerLabel) timerLabel.textContent = getConfig().label;
@@ -813,8 +894,15 @@
     // SMART FOCUS & KEYBOARD EVENT ROUTER (NO FOCUS TRAP!)
     // --------------------------------------------------------------------------
     function handleKeydown(event) {
-        // Allow normal modifier combinations (Ctrl+C, Ctrl+V, etc.) except word backspace
-        if ((event.ctrlKey || event.altKey) && event.key === "Backspace") {
+        // Global reset shortcut takes precedence even if focus is on buttons
+        if (event.key === "Escape") {
+            event.preventDefault();
+            resetSession();
+            return;
+        }
+
+        // Allow normal modifier combinations except word backspace (Ctrl, Alt, or Cmd + Backspace)
+        if ((event.ctrlKey || event.altKey || event.metaKey) && event.key === "Backspace") {
             event.preventDefault();
             handleWordBackspace();
             return;
@@ -828,12 +916,6 @@
         const isInteractive = active && (active.tagName === "INPUT" && active !== hiddenInput || active.tagName === "TEXTAREA" || active.tagName === "BUTTON" || active.tagName === "A");
 
         if (isInteractive) return;
-
-        if (event.key === "Escape") {
-            event.preventDefault();
-            resetSession();
-            return;
-        }
 
         if (event.key === "Backspace") {
             event.preventDefault();
@@ -890,59 +972,25 @@
         // Global key router
         document.addEventListener("keydown", handleKeydown);
 
-        // Mobile input compatibility (for Android / iOS IME virtual keyboard)
+        // Mobile virtual keyboard compatibility (Android / iOS IME)
         if (hiddenInput) {
-            hiddenInput.addEventListener("input", () => {
+            hiddenInput.addEventListener("beforeinput", (e) => {
+                if (e.inputType === "deleteContentBackward") {
+                    e.preventDefault();
+                    handleBackspace();
+                }
+            });
+
+            hiddenInput.addEventListener("input", (e) => {
+                if (e.inputType === "deleteContentBackward") {
+                    handleBackspace();
+                    return;
+                }
                 const val = hiddenInput.value;
                 hiddenInput.value = "";
                 [...val].forEach((char) => {
                     if (char.length === 1) handleTyping(char);
                 });
-            });
-        }
-
-        // Contact form handling (graceful feedback + mailto fallback)
-        if (contactForm) {
-            contactForm.addEventListener("submit", async (event) => {
-                event.preventDefault();
-                if (!contactForm.checkValidity()) {
-                    contactForm.reportValidity();
-                    return;
-                }
-
-                const endpoint = contactForm.dataset.endpoint;
-                const submitBtn = contactForm.querySelector("button[type=submit]");
-                const subject = document.getElementById("subject")?.value || "Inquiry";
-                const message = document.getElementById("message")?.value || "";
-
-                if (!endpoint) {
-                    if (formStatus) {
-                        formStatus.textContent = "Opening your default email client...";
-                    }
-                    window.location.href = `mailto:hello@minttyping.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-                    return;
-                }
-
-                if (submitBtn) submitBtn.disabled = true;
-                if (formStatus) formStatus.textContent = "Sending message...";
-
-                try {
-                    const response = await fetch(endpoint, {
-                        method: "POST",
-                        body: new FormData(contactForm),
-                        headers: { Accept: "application/json" }
-                    });
-                    if (!response.ok) throw new Error("Failed");
-                    if (formStatus) formStatus.textContent = "Message sent successfully!";
-                    contactForm.reset();
-                } catch {
-                    if (formStatus) {
-                        formStatus.textContent = "Could not send directly. Opening mail client...";
-                    }
-                    window.location.href = `mailto:hello@minttyping.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-                } finally {
-                    if (submitBtn) submitBtn.disabled = false;
-                }
             });
         }
     }

@@ -21,6 +21,18 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styl.css">
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem("mint_typing_theme");
+                if (saved && (saved === "light" || saved === "dark" || saved === "mint")) {
+                    document.documentElement.setAttribute("data-theme", saved);
+                } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                    document.documentElement.setAttribute("data-theme", "dark");
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 
 <body data-page="home">
@@ -38,6 +50,10 @@
                 <a href="interface.html">Typing</a>
             </nav>
             <div class="header-actions">
+                <button class="tool-btn magnetic" type="button" data-sound-toggle aria-label="Toggle mechanical sound" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                    <span class="sound-label">Sound</span>
+                </button>
                 <button class="tool-btn magnetic" type="button" data-theme-toggle aria-label="Toggle theme">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     <span class="theme-label">Theme</span>
@@ -118,7 +134,7 @@
                 </div>
             </div>
             <div class="contact-panel">
-                <form class="contact-form" id="contact-form" data-endpoint="">
+                <form class="contact-form" id="contact-form" action="#" method="post" data-endpoint="">
                     <div class="form-field">
                         <label for="subject">Subject</label>
                         <input id="subject" name="subject" type="text" placeholder="COLLABORATION" required>

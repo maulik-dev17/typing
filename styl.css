@@ -316,6 +316,12 @@ button {
 .tool-btn svg {
     width: 14px;
     height: 14px;
+    fill: none;
+    stroke: currentColor;
+    display: block;
+}
+
+.tool-btn svg circle {
     fill: currentColor;
 }
 

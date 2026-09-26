@@ -167,5 +167,52 @@
                 closeNav();
             }
         });
+
+        // Contact Form Handling (Available across site pages)
+        const contactForm = document.getElementById("contact-form");
+        if (contactForm) {
+            contactForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!contactForm.checkValidity()) {
+                    contactForm.reportValidity();
+                    return;
+                }
+
+                const endpoint = contactForm.dataset.endpoint;
+                const submitBtn = contactForm.querySelector("button[type=submit]");
+                const formStatus = document.getElementById("form-status");
+                const subject = document.getElementById("subject")?.value || "Inquiry";
+                const message = document.getElementById("message")?.value || "";
+
+                if (!endpoint) {
+                    if (formStatus) {
+                        formStatus.textContent = "Opening your default email client...";
+                    }
+                    window.location.href = `mailto:hello@minttyping.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+                    return;
+                }
+
+                if (submitBtn) submitBtn.disabled = true;
+                if (formStatus) formStatus.textContent = "Sending message...";
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: "POST",
+                        body: new FormData(contactForm),
+                        headers: { Accept: "application/json" }
+                    });
+                    if (!response.ok) throw new Error("Failed");
+                    if (formStatus) formStatus.textContent = "Message sent successfully!";
+                    contactForm.reset();
+                } catch {
+                    if (formStatus) {
+                        formStatus.textContent = "Could not send directly. Opening mail client...";
+                    }
+                    window.location.href = `mailto:hello@minttyping.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            });
+        }
     });
 })();
